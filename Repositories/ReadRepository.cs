@@ -259,6 +259,9 @@ where TContext : DbContext
 		return DbSet.GetEnumerator();
 	}
 
+	public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+		=> DbSet.AsAsyncEnumerable().GetAsyncEnumerator(cancellationToken);
+
 	IEnumerator IEnumerable.GetEnumerator()
 	{
 		return GetEnumerator();
@@ -267,4 +270,5 @@ where TContext : DbContext
 	public Type ElementType => DbSet.ElementType;
 	public Expression Expression => DbSet.Expression;
 	public IQueryProvider Provider => DbSet.Provider;
+	
 }

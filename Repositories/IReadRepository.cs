@@ -1,5 +1,5 @@
 ﻿namespace Simpository.Repositories;
-public interface IReadRepository<T> : IQueryable<T>, IDisposable where T : class
+public interface IReadRepository<T> : IQueryable<T>, IAsyncEnumerable<T>, IDisposable where T : class
 {
 	Task<T?> Find(object keyValue, CancellationToken cancellationToken = default);
 	Task<T?> Find(object[] keyValues, CancellationToken cancellationToken = default);

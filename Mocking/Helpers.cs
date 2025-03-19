@@ -22,7 +22,7 @@ public static class Helpers
 		repo.Setup(x => x.ElementType).Returns(queryable.ElementType);
 		repo.Setup(x => x.Provider).Returns(queryable.Provider);
 		repo.Setup(x => x.GetEnumerator()).Returns(() => queryable.GetEnumerator());
-
+		
 		return repo;
 	}
 }
