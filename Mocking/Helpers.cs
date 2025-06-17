@@ -22,7 +22,12 @@ public static class Helpers
 		repo.Setup(x => x.ElementType).Returns(queryable.ElementType);
 		repo.Setup(x => x.Provider).Returns(queryable.Provider);
 		repo.Setup(x => x.GetEnumerator()).Returns(() => queryable.GetEnumerator());
-		
+
+		// This is needed to prevent an exception when calling repo.ToListAsync from tests.
+		var asyncEnumerable = (IAsyncEnumerable<TEntity>)queryable;
+		repo.Setup(x => x.GetAsyncEnumerator(It.IsAny<CancellationToken>()))
+			.Returns(() => asyncEnumerable.GetAsyncEnumerator());
+
 		return repo;
 	}
 }
