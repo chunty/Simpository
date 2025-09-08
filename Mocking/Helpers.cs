@@ -16,7 +16,7 @@ public static class Helpers
 		where TEntity : class  // Ensures TEntity is a class
 		where TRepository : class, IReadRepository<TEntity> // Ensures TRepo implements IReadRepository<TEntity>
 	{
-		var queryable = items.BuildMock();
+		var queryable = items.ToList().BuildMock();
 
 		repo.Setup(x => x.Expression).Returns(queryable.Expression);
 		repo.Setup(x => x.ElementType).Returns(queryable.ElementType);
