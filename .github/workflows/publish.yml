@@ -1,0 +1,60 @@
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate and parse tag
+        id: version
+        run: |
+          TAG="${{ github.ref_name }}"
+
+          if [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
+            # v1.0.1.5 → 1.0.1-preview.5 (pre-release)
+            VERSION="${BASH_REMATCH[1]}-preview.${BASH_REMATCH[2]}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            # v1.0.1 → 1.0.1 (stable)
+            VERSION="${BASH_REMATCH[1]}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Tag '$TAG' does not match v1.2.3 or v1.2.3.4 — skipping publish."
+            exit 1
+          fi
+
+          echo "Resolved NuGet version: $VERSION"
+
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Pack
+        run: >
+          dotnet pack Simpository.csproj
+          --no-build
+          --configuration Release
+          -p:Version=${{ steps.version.outputs.version }}
+          --output ./nupkg
+
+      - name: Push to NuGet
+        run: >
+          dotnet nuget push ./nupkg/*.nupkg
+          --api-key ${{ secrets.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate

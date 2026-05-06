@@ -1,0 +1,10 @@
+<Project>
+	<PropertyGroup>
+		<Authors>Chris Hunt</Authors>
+		<Company>TappetyClick</Company>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+	</PropertyGroup>
+</Project>

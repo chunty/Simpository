@@ -1,0 +1,49 @@
+name: Sync Repository Metadata
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Simpository.csproj
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      administration: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse metadata from csproj
+        run: |
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, json
+
+          root = ET.parse('Simpository.csproj').getroot()
+
+          description = root.findtext('./PropertyGroup/Description') or ''
+          tags        = root.findtext('./PropertyGroup/PackageTags') or ''
+          topics      = [t.strip().lower() for t in tags.split(';') if t.strip()]
+
+          with open('repo_description.txt', 'w') as f:
+              f.write(description)
+
+          with open('repo_topics.json', 'w') as f:
+              json.dump({'names': topics}, f)
+          EOF
+
+      - name: Update repository description
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api --method PATCH /repos/${{ github.repository }} \
+            -f description="$(cat repo_description.txt)"
+
+      - name: Update repository topics
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api --method PUT /repos/${{ github.repository }}/topics \
+            --input repo_topics.json
