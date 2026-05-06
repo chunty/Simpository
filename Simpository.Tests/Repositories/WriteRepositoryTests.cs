@@ -150,7 +150,7 @@ public class WriteRepositoryTests
         context.TestEntities.Add(new TestEntity { Id = 1, Name = "Alice" });
         await context.SaveChangesAsync();
         context.ChangeTracker.Clear();
-        using var repo = new WriteRepository<TestEntity, TestDbContext>(context);
+        using IWriteRepository<TestEntity> repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
         await repo.ToListAsync();
 

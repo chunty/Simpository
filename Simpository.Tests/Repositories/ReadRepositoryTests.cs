@@ -157,7 +157,7 @@ public class ReadRepositoryTests
             new TestEntity { Id = 3, Name = "Charlie" });
         await context.SaveChangesAsync();
         context.ChangeTracker.Clear();
-        using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
+        using IReadRepository<TestEntity> repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
         var result = repo.Where(e => e.Name.StartsWith("A")).ToList();
 
@@ -174,7 +174,7 @@ public class ReadRepositoryTests
             new TestEntity { Id = 2, Name = "Bob" });
         await context.SaveChangesAsync();
         context.ChangeTracker.Clear();
-        using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
+        using IReadRepository<TestEntity> repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
         var result = await repo.ToListAsync();
 
@@ -193,7 +193,7 @@ public class ReadRepositoryTests
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
         var results = new List<TestEntity>();
-        await foreach (var entity in repo)
+        await foreach (var entity in repo.AsAsyncEnumerable())
             results.Add(entity);
 
         Assert.Equal(2, results.Count);
@@ -206,7 +206,7 @@ public class ReadRepositoryTests
         context.TestEntities.Add(new TestEntity { Id = 1, Name = "Alice" });
         await context.SaveChangesAsync();
         context.ChangeTracker.Clear();
-        using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
+        using IReadRepository<TestEntity> repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
         await repo.ToListAsync();
 

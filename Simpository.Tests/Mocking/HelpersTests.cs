@@ -58,7 +58,7 @@ public class HelpersTests
         });
 
         var results = new List<TestEntity>();
-        await foreach (var entity in mockRepo.Object)
+        await foreach (var entity in mockRepo.Object.AsAsyncEnumerable())
             results.Add(entity);
 
         Assert.Equal(2, results.Count);

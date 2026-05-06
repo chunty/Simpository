@@ -17,9 +17,6 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore" />
 		<PackageReference Include="Moq" />
 		<PackageReference Include="MockQueryable.Moq" />
-		<PackageReference Include="System.Net.Http" />
-		<PackageReference Include="System.Private.Uri" />
-		<PackageReference Include="System.Text.RegularExpressions" />
 	</ItemGroup>
 
 </Project>
