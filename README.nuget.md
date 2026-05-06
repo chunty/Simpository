@@ -9,22 +9,10 @@ Generic read/write repository abstractions for Entity Framework Core.
 - **Custom repositories** — pass a pre-built queryable to the base constructor to bake in eager loading, ordering, and filtering so every query returns the correct, fully-populated object structure
 - Moq helpers for unit testing repositories without hitting a real database
 
-## Quick Start
+## Installation
 
 ```bash
 dotnet add package Simpository
-```
-
-```csharp
-// Register all repos for every DbSet<T> on AppDbContext
-builder.Services.AddGenericRepos<AppDbContext>();
-
-// Inject and use
-public class ProductService(IReadRepository<Product> products)
-{
-    public Task<List<Product>> GetActiveAsync() =>
-        products.Where(p => p.IsActive).ToListAsync();
-}
 ```
 
 ## Full Documentation
