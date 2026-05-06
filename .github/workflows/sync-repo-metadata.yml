@@ -2,7 +2,7 @@ name: Sync Repository Metadata
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - Simpository.csproj
 
