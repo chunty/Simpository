@@ -5,13 +5,13 @@ on:
     branches: [master]
     paths:
       - Simpository.csproj
+  workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      administration: write
 
     steps:
       - uses: actions/checkout@v4
@@ -36,14 +36,14 @@ jobs:
 
       - name: Update repository description
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
         run: |
           gh api --method PATCH /repos/${{ github.repository }} \
             -f description="$(cat repo_description.txt)"
 
       - name: Update repository topics
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
         run: |
           gh api --method PUT /repos/${{ github.repository }}/topics \
             --input repo_topics.json
