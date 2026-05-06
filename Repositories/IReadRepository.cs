@@ -7,10 +7,19 @@
 /// <remarks>
 /// By default, entities are returned without change tracking to encourage read-only usage.
 /// Use <see cref="IWriteRepository{T}"/> when you need tracked entities for mutations.
+/// <para>
+/// To use <c>await foreach</c>, call <see cref="AsAsyncEnumerable"/> explicitly.
+/// This avoids LINQ ambiguity in .NET 10+ where both <see cref="IQueryable{T}"/> and
+/// <see cref="IAsyncEnumerable{T}"/> extension methods are present in the BCL.
+/// </para>
 /// </remarks>
 /// <typeparam name="T">The entity type managed by this repository.</typeparam>
-public interface IReadRepository<T> : IQueryable<T>, IAsyncEnumerable<T>, IDisposable where T : class
+public interface IReadRepository<T> : IQueryable<T>, IDisposable where T : class
 {
+	/// <summary>
+	/// Returns an <see cref="IAsyncEnumerable{T}"/> for use with <c>await foreach</c>.
+	/// </summary>
+	IAsyncEnumerable<T> AsAsyncEnumerable();
 	/// <summary>
 	/// Asynchronously finds an entity by a single key value using the underlying <see cref="Microsoft.EntityFrameworkCore.DbContext"/>.
 	/// </summary>

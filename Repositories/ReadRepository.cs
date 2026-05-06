@@ -14,7 +14,7 @@ namespace Simpository.Repositories;
 /// Alternatively, call <see cref="SetQueryable"/> with <c>trackChanges = true</c>, or call <see cref="SetTrackingBehavior"/> with <c>true</c>.</remarks>
 /// <typeparam name="T">The type of the entity managed by the repository.</typeparam>
 /// <typeparam name="TContext"></typeparam>
-public class ReadRepository<T, TContext> : IReadRepository<T> where T : class
+public class ReadRepository<T, TContext> : IReadRepository<T>, IAsyncEnumerable<T> where T : class
 where TContext : DbContext
 {
 	protected readonly TContext DbContext;
@@ -308,6 +308,8 @@ where TContext : DbContext
 		// ReSharper disable once NotDisposedResourceIsReturned
 		return DbSet.GetEnumerator();
 	}
+
+	public IAsyncEnumerable<T> AsAsyncEnumerable() => this;
 
 	public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
 		=> DbSet.AsAsyncEnumerable().GetAsyncEnumerator(cancellationToken);
