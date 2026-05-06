@@ -6,7 +6,12 @@
 		<Version>1.0.6</Version>
 		<Description>Generic read/write repository abstractions for Entity Framework Core. Provides IReadRepository and IWriteRepository with full LINQ and async enumeration support, automatic dependency injection registration from DbContext entity sets, and Moq helpers for unit testing.</Description>
 		<PackageTags>repository;entity-framework;efcore;generic-repository;data-access;dependency-injection;moq;unit-testing;cqrs</PackageTags>
+		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.nuget.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.EntityFrameworkCore" />
