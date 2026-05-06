@@ -142,12 +142,55 @@ where TContext : DbContext
 	{
 		var result = await Get(key, cancellationToken);
 
-		if (result is null)
+		if (result is not null) return result;
+		var primaryKey = GetPrimaryKey();
+		throw new DataNotFoundException<T>(key, primaryKey.Name);
+
+	}
+
+	/// <summary>
+	/// Asynchronously retrieves an entity by its composite primary key using a LINQ query.
+	/// Unlike <see cref="Find(object[], CancellationToken)"/>, this always queries the database directly.
+	/// </summary>
+	/// <param name="keys">The composite key values in the same order as defined on the entity.</param>
+	/// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+	/// <returns>The matching entity, or <c>null</c> if not found.</returns>
+	public async Task<T?> Get(object[] keys, CancellationToken cancellationToken = default)
+	{
+		var keyProperties = GetPrimaryKeys();
+
+		if (keys.Length != keyProperties.Count)
+			throw new ArgumentException(
+				$"Expected {keyProperties.Count} key value(s) for entity '{typeof(T).Name}', but got {keys.Length}.");
+
+		var parameter = Expression.Parameter(typeof(T), "e");
+
+		// Build: e.Key1 == keys[0] && e.Key2 == keys[1] && ...
+		Expression? predicate = null;
+		for (var i = 0; i < keyProperties.Count; i++)
 		{
-			var primaryKey = GetPrimaryKey(); // Retrieve the primary key property of the entity
-			throw new DataNotFoundException<T>(key, primaryKey.Name); // Throw if not found
+			var property = Expression.Property(parameter, keyProperties[i].Name);
+			var equality = Expression.Equal(property, Expression.Constant(keys[i]));
+			predicate = predicate is null ? equality : Expression.AndAlso(predicate, equality);
 		}
 
+		var lambda = Expression.Lambda<Func<T, bool>>(predicate!, parameter);
+		return await DbSet.Where(lambda).SingleOrDefaultAsync(cancellationToken);
+	}
+
+	/// <summary>
+	/// Asynchronously retrieves an entity by its composite primary key, throwing if not found.
+	/// Unlike <see cref="FindOrThrow(object[], CancellationToken)"/>, this always queries the database directly.
+	/// </summary>
+	/// <param name="keys">The composite key values in the same order as defined on the entity.</param>
+	/// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+	/// <returns>The matching entity.</returns>
+	/// <exception cref="DataNotFoundException{T}">Thrown when no entity with the given keys exists.</exception>
+	public async Task<T> GetOrThrow(object[] keys, CancellationToken cancellationToken = default)
+	{
+		var keyProperties = GetPrimaryKeys();
+		var result = await Get(keys, cancellationToken) ??
+					 throw new DataNotFoundException<T>(keys, keyProperties.Select(p => p.Name).ToArray());
 		return result;
 	}
 
@@ -178,7 +221,7 @@ where TContext : DbContext
 	protected void SetTrackingBehavior(bool trackingEnabled)
 	{
 		DbSet = trackingEnabled ? DbSet.AsTracking() : // Enable change tracking for the DbSet
-			DbSet.AsNoTracking(); // Disable change tracking for the DbSet
+		DbSet.AsNoTracking(); // Disable change tracking for the DbSet
 	}
 
 
@@ -212,17 +255,24 @@ where TContext : DbContext
 	/// </exception>
 	private IProperty GetPrimaryKey()
 	{
-		// Get entity type metadata from the DbContext model
+		var properties = GetPrimaryKeys();
+
+		if (properties.Count > 1)
+			throw new NotSupportedException(
+				$"Entity '{typeof(T).Name}' has a composite primary key. Use Get(object[] keys) or GetOrThrow(object[] keys) instead.");
+
+		return properties[0];
+	}
+
+	private IReadOnlyList<IProperty> GetPrimaryKeys()
+	{
 		var entityType = DbContext.Model.FindEntityType(typeof(T)) ??
 						 throw new MissingPrimaryKeyException($"Cannot find entity type for {nameof(T)}");
 
-		// Get the primary key metadata for the entity type
 		var primaryKey = entityType.FindPrimaryKey() ??
 						 throw new MissingPrimaryKeyException($"Type {nameof(T)} has no primary key");
 
-		// Access the first primary key property (assuming the entity has a single primary key)
-		var keyProperty = primaryKey.Properties[0];
-		return keyProperty;
+		return primaryKey.Properties;
 	}
 
 	/// <summary>

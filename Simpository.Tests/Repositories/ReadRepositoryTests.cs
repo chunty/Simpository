@@ -224,4 +224,90 @@ public class ReadRepositoryTests
         await Assert.ThrowsAsync<ObjectDisposedException>(
             () => context.TestEntities.ToListAsync());
     }
+
+    // Composite key tests
+
+    private static async Task<(TestDbContext, CompositeKeyEntity)> SeedCompositeAsync()
+    {
+        var context = TestDbContext.Create();
+        var entity = new CompositeKeyEntity { OrderId = 1, LineNumber = 2, Description = "Widget" };
+        context.CompositeKeyEntities.Add(entity);
+        await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+        return (context, entity);
+    }
+
+    [Fact]
+    public async Task Get_WithCompositeKeyArray_WhenEntityExists_ReturnsEntity()
+    {
+        var (context, entity) = await SeedCompositeAsync();
+        using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
+
+        var result = await repo.Get(new object[] { entity.OrderId, entity.LineNumber });
+
+        Assert.NotNull(result);
+        Assert.Equal(entity.OrderId, result.OrderId);
+        Assert.Equal(entity.LineNumber, result.LineNumber);
+    }
+
+    [Fact]
+    public async Task Get_WithCompositeKeyArray_WhenEntityNotFound_ReturnsNull()
+    {
+        var context = TestDbContext.Create();
+        using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
+
+        var result = await repo.Get(new object[] { 99, 99 });
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetOrThrow_WithCompositeKeyArray_WhenEntityExists_ReturnsEntity()
+    {
+        var (context, entity) = await SeedCompositeAsync();
+        using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
+
+        var result = await repo.GetOrThrow(new object[] { entity.OrderId, entity.LineNumber });
+
+        Assert.NotNull(result);
+        Assert.Equal(entity.OrderId, result.OrderId);
+        Assert.Equal(entity.LineNumber, result.LineNumber);
+    }
+
+    [Fact]
+    public async Task GetOrThrow_WithCompositeKeyArray_WhenEntityNotFound_ThrowsDataNotFoundException()
+    {
+        var context = TestDbContext.Create();
+        using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
+
+        await Assert.ThrowsAsync<DataNotFoundException<CompositeKeyEntity>>(
+            () => repo.GetOrThrow(new object[] { 99, 99 }));
+    }
+
+    [Fact]
+    public async Task Get_SingleKey_WithCompositeKeyEntity_ThrowsNotSupportedException()
+    {
+        var context = TestDbContext.Create();
+        using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
+
+        await Assert.ThrowsAsync<NotSupportedException>(() => repo.Get(1));
+    }
+
+    [Fact]
+    public async Task GetOrThrow_SingleKey_WithCompositeKeyEntity_ThrowsNotSupportedException()
+    {
+        var context = TestDbContext.Create();
+        using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
+
+        await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetOrThrow(1));
+    }
+
+    [Fact]
+    public async Task Get_WithCompositeKeyArray_WrongKeyCount_ThrowsArgumentException()
+    {
+        var context = TestDbContext.Create();
+        using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => repo.Get(new object[] { 1 }));
+    }
 }

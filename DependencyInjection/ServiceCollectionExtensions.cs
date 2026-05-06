@@ -17,41 +17,17 @@ public static class ServiceCollectionExtensions
 	/// <param name="services">The service collection to add registrations to.</param>
 	/// <returns>The service collection, to allow method chaining.</returns>
 	public static IServiceCollection AddGenericReadRepo<TContext>(this IServiceCollection services)
-	{
-		var t = typeof(TContext);
-		var properties = t.GetProperties(BindingFlags.GetProperty | BindingFlags.Instance | BindingFlags.Public)
-			.Where(i => i.PropertyType.IsGenericType && i.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>));
-		var types = properties.Select(p => p.PropertyType.GenericTypeArguments[0]).ToArray();
-
-		foreach (var type in types)
-		{
-			services.AddScoped(typeof(IReadRepository<>).MakeGenericType(type), typeof(ReadRepository<,>).MakeGenericType(type, t));
-		}
-
-		return services;
-	}
+		=> services.RegisterRepositories<TContext>(typeof(IReadRepository<>), typeof(ReadRepository<,>));
 
 	/// <summary>
 	/// Registers a scoped <see cref="IWriteRepository{T}"/> for every <see cref="DbSet{T}"/> property
 	/// declared on <typeparamref name="TContext"/>.
 	/// </summary>
 	/// <typeparam name="TContext">The <see cref="DbContext"/> type to inspect for entity sets.</typeparam>
-	/// <param name="registry">The service collection to add registrations to.</param>
+	/// <param name="services">The service collection to add registrations to.</param>
 	/// <returns>The service collection, to allow method chaining.</returns>
-	public static IServiceCollection AddGenericWriteRepo<TContext>(this IServiceCollection registry)
-	{
-		var t = typeof(TContext);
-		var properties = t.GetProperties(BindingFlags.GetProperty | BindingFlags.Instance | BindingFlags.Public)
-			.Where(i => i.PropertyType.IsGenericType && i.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>));
-		var types = properties.Select(p => p.PropertyType.GenericTypeArguments[0]).ToArray();
-
-		foreach (var type in types)
-		{
-			registry.AddScoped(typeof(IWriteRepository<>).MakeGenericType(type), typeof(WriteRepository<,>).MakeGenericType(type, t));
-		}
-
-		return registry;
-	}
+	public static IServiceCollection AddGenericWriteRepo<TContext>(this IServiceCollection services)
+		=> services.RegisterRepositories<TContext>(typeof(IWriteRepository<>), typeof(WriteRepository<,>));
 
 	/// <summary>
 	/// Registers both <see cref="IReadRepository{T}"/> and <see cref="IWriteRepository{T}"/> for every
@@ -60,13 +36,33 @@ public static class ServiceCollectionExtensions
 	/// <see cref="AddGenericWriteRepo{TContext}"/> in sequence.
 	/// </summary>
 	/// <typeparam name="TContext">The <see cref="DbContext"/> type to inspect for entity sets.</typeparam>
-	/// <param name="registry">The service collection to add registrations to.</param>
+	/// <param name="services">The service collection to add registrations to.</param>
 	/// <returns>The service collection, to allow method chaining.</returns>
-	public static IServiceCollection AddGenericRepos<TContext>(this IServiceCollection registry)
+	public static IServiceCollection AddGenericRepos<TContext>(this IServiceCollection services)
 	{
-		registry.AddGenericReadRepo<TContext>();
-		registry.AddGenericWriteRepo<TContext>();
+		services.AddGenericReadRepo<TContext>();
+		services.AddGenericWriteRepo<TContext>();
+		return services;
+	}
 
-		return registry;
+	private static IServiceCollection RegisterRepositories<TContext>(
+		this IServiceCollection services,
+		Type interfaceType,
+		Type implementationType)
+	{
+		var contextType = typeof(TContext);
+		var entityTypes = contextType
+			.GetProperties(BindingFlags.GetProperty | BindingFlags.Instance | BindingFlags.Public)
+			.Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>))
+			.Select(p => p.PropertyType.GenericTypeArguments[0]);
+
+		foreach (var entityType in entityTypes)
+		{
+			services.AddScoped(
+				interfaceType.MakeGenericType(entityType),
+				implementationType.MakeGenericType(entityType, contextType));
+		}
+
+		return services;
 	}
 }

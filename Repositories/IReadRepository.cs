@@ -62,4 +62,23 @@ public interface IReadRepository<T> : IQueryable<T>, IAsyncEnumerable<T>, IDispo
 	/// <returns>The matching entity.</returns>
 	/// <exception cref="Exceptions.DataNotFoundException{T}">Thrown when no entity with the given key exists.</exception>
 	Task<T> GetOrThrow(object key, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Asynchronously retrieves an entity by its composite primary key using a LINQ query.
+	/// Unlike <see cref="Find(object[], CancellationToken)"/>, this always queries the database directly.
+	/// </summary>
+	/// <param name="keys">The composite key values in the same order as defined on the entity.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>The matching entity, or <c>null</c> if not found.</returns>
+	Task<T?> Get(object[] keys, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Asynchronously retrieves an entity by its composite primary key, throwing if not found.
+	/// Unlike <see cref="FindOrThrow(object[], CancellationToken)"/>, this always queries the database directly.
+	/// </summary>
+	/// <param name="keys">The composite key values in the same order as defined on the entity.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>The matching entity.</returns>
+	/// <exception cref="Exceptions.DataNotFoundException{T}">Thrown when no entity with the given keys exists.</exception>
+	Task<T> GetOrThrow(object[] keys, CancellationToken cancellationToken = default);
 }

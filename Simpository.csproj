@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<DefaultItemExcludes>$(DefaultItemExcludes);Simpository.Tests\**</DefaultItemExcludes>
 		<PackageId>Simpository</PackageId>
-		<Version>1.0.6</Version>
+		<Version>1.1.0</Version>
 		<Description>Generic read/write repository abstractions for Entity Framework Core. Provides IReadRepository and IWriteRepository with full LINQ and async enumeration support, automatic dependency injection registration from DbContext entity sets, and Moq helpers for unit testing.</Description>
 		<PackageTags>repository;entity-framework;efcore;generic-repository;data-access;dependency-injection;moq;unit-testing;cqrs</PackageTags>
 		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
