@@ -9,7 +9,7 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         var entity = new TestEntity { Id = 1, Name = "Alice" };
         context.TestEntities.Add(entity);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         context.ChangeTracker.Clear();
         return (context, entity);
     }
@@ -20,7 +20,7 @@ public class ReadRepositoryTests
         var (context, entity) = await SeedAsync();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.Find(entity.Id);
+        var result = await repo.Find(entity.Id, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal(entity.Id, result.Id);
@@ -32,7 +32,7 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.Find(999);
+        var result = await repo.Find(999, TestContext.Current.CancellationToken);
 
         Assert.Null(result);
     }
@@ -43,7 +43,7 @@ public class ReadRepositoryTests
         var (context, entity) = await SeedAsync();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.Find(new object[] { entity.Id });
+        var result = await repo.Find(new object[] { entity.Id }, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal(entity.Id, result.Id);
@@ -55,7 +55,7 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.Find(new object[] { 999 });
+        var result = await repo.Find(new object[] { 999 }, TestContext.Current.CancellationToken);
 
         Assert.Null(result);
     }
@@ -66,7 +66,7 @@ public class ReadRepositoryTests
         var (context, entity) = await SeedAsync();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.FindOrThrow(entity.Id);
+        var result = await repo.FindOrThrow(entity.Id, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal(entity.Id, result.Id);
@@ -78,7 +78,7 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        await Assert.ThrowsAsync<DataNotFoundException<TestEntity>>(() => repo.FindOrThrow(999));
+        await Assert.ThrowsAsync<DataNotFoundException<TestEntity>>(() => repo.FindOrThrow(999, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class ReadRepositoryTests
         var (context, entity) = await SeedAsync();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.FindOrThrow(new object[] { entity.Id });
+        var result = await repo.FindOrThrow(new object[] { entity.Id }, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal(entity.Id, result.Id);
@@ -100,7 +100,7 @@ public class ReadRepositoryTests
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
         await Assert.ThrowsAsync<DataNotFoundException<TestEntity>>(
-            () => repo.FindOrThrow(new object[] { 999 }));
+            () => repo.FindOrThrow(new object[] { 999 }, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class ReadRepositoryTests
         var (context, entity) = await SeedAsync();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.Get(entity.Id);
+        var result = await repo.Get(entity.Id, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal(entity.Id, result.Id);
@@ -121,7 +121,7 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.Get(999);
+        var result = await repo.Get(999, TestContext.Current.CancellationToken);
 
         Assert.Null(result);
     }
@@ -132,7 +132,7 @@ public class ReadRepositoryTests
         var (context, entity) = await SeedAsync();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.GetOrThrow(entity.Id);
+        var result = await repo.GetOrThrow(entity.Id, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal(entity.Id, result.Id);
@@ -144,7 +144,7 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        await Assert.ThrowsAsync<DataNotFoundException<TestEntity>>(() => repo.GetOrThrow(999));
+        await Assert.ThrowsAsync<DataNotFoundException<TestEntity>>(() => repo.GetOrThrow(999, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -155,7 +155,7 @@ public class ReadRepositoryTests
             new TestEntity { Id = 1, Name = "Alice" },
             new TestEntity { Id = 2, Name = "Bob" },
             new TestEntity { Id = 3, Name = "Charlie" });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         context.ChangeTracker.Clear();
         using IReadRepository<TestEntity> repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
@@ -172,11 +172,11 @@ public class ReadRepositoryTests
         context.TestEntities.AddRange(
             new TestEntity { Id = 1, Name = "Alice" },
             new TestEntity { Id = 2, Name = "Bob" });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         context.ChangeTracker.Clear();
         using IReadRepository<TestEntity> repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.ToListAsync();
+        var result = await repo.ToListAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(2, result.Count);
     }
@@ -188,7 +188,7 @@ public class ReadRepositoryTests
         context.TestEntities.AddRange(
             new TestEntity { Id = 1, Name = "Alice" },
             new TestEntity { Id = 2, Name = "Bob" });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         context.ChangeTracker.Clear();
         using var repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
@@ -204,11 +204,11 @@ public class ReadRepositoryTests
     {
         var context = TestDbContext.Create();
         context.TestEntities.Add(new TestEntity { Id = 1, Name = "Alice" });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         context.ChangeTracker.Clear();
         using IReadRepository<TestEntity> repo = new ReadRepository<TestEntity, TestDbContext>(context);
 
-        await repo.ToListAsync();
+        await repo.ToListAsync(TestContext.Current.CancellationToken);
 
         Assert.Empty(context.ChangeTracker.Entries<TestEntity>());
     }
@@ -222,7 +222,7 @@ public class ReadRepositoryTests
         repo.Dispose();
 
         await Assert.ThrowsAsync<ObjectDisposedException>(
-            () => context.TestEntities.ToListAsync());
+            () => context.TestEntities.ToListAsync(TestContext.Current.CancellationToken));
     }
 
     // Composite key tests
@@ -232,7 +232,7 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         var entity = new CompositeKeyEntity { OrderId = 1, LineNumber = 2, Description = "Widget" };
         context.CompositeKeyEntities.Add(entity);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         context.ChangeTracker.Clear();
         return (context, entity);
     }
@@ -243,7 +243,7 @@ public class ReadRepositoryTests
         var (context, entity) = await SeedCompositeAsync();
         using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
 
-        var result = await repo.Get(new object[] { entity.OrderId, entity.LineNumber });
+        var result = await repo.Get(new object[] { entity.OrderId, entity.LineNumber }, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal(entity.OrderId, result.OrderId);
@@ -256,7 +256,7 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
 
-        var result = await repo.Get(new object[] { 99, 99 });
+        var result = await repo.Get(new object[] { 99, 99 }, TestContext.Current.CancellationToken);
 
         Assert.Null(result);
     }
@@ -267,7 +267,7 @@ public class ReadRepositoryTests
         var (context, entity) = await SeedCompositeAsync();
         using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
 
-        var result = await repo.GetOrThrow(new object[] { entity.OrderId, entity.LineNumber });
+        var result = await repo.GetOrThrow(new object[] { entity.OrderId, entity.LineNumber }, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal(entity.OrderId, result.OrderId);
@@ -281,7 +281,7 @@ public class ReadRepositoryTests
         using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
 
         await Assert.ThrowsAsync<DataNotFoundException<CompositeKeyEntity>>(
-            () => repo.GetOrThrow(new object[] { 99, 99 }));
+            () => repo.GetOrThrow(new object[] { 99, 99 }, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -290,7 +290,7 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
 
-        await Assert.ThrowsAsync<NotSupportedException>(() => repo.Get(1));
+        await Assert.ThrowsAsync<NotSupportedException>(() => repo.Get(1, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -299,7 +299,7 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
 
-        await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetOrThrow(1));
+        await Assert.ThrowsAsync<NotSupportedException>(() => repo.GetOrThrow(1, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -308,6 +308,6 @@ public class ReadRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new ReadRepository<CompositeKeyEntity, TestDbContext>(context);
 
-        await Assert.ThrowsAsync<ArgumentException>(() => repo.Get(new object[] { 1 }));
+        await Assert.ThrowsAsync<ArgumentException>(() => repo.Get(new object[] { 1 }, TestContext.Current.CancellationToken));
     }
 }

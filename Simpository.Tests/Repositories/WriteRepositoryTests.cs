@@ -10,11 +10,11 @@ public class WriteRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.Add(new TestEntity { Id = 1, Name = "Alice" });
+        var result = await repo.Add(new TestEntity { Id = 1, Name = "Alice" }, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal(1, result.Id);
-        Assert.Equal(1, await context.TestEntities.CountAsync());
+        Assert.Equal(1, await context.TestEntities.CountAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -27,10 +27,10 @@ public class WriteRepositoryTests
         {
             new TestEntity { Id = 1, Name = "Alice" },
             new TestEntity { Id = 2, Name = "Bob" }
-        });
+        }, TestContext.Current.CancellationToken);
 
         Assert.Equal(2, result.Count());
-        Assert.Equal(2, await context.TestEntities.CountAsync());
+        Assert.Equal(2, await context.TestEntities.CountAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -39,10 +39,10 @@ public class WriteRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.Add(new List<TestEntity>());
+        var result = await repo.Add(new List<TestEntity>(), TestContext.Current.CancellationToken);
 
         Assert.Empty(result);
-        Assert.Equal(0, await context.TestEntities.CountAsync());
+        Assert.Equal(0, await context.TestEntities.CountAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -50,15 +50,15 @@ public class WriteRepositoryTests
     {
         var context = TestDbContext.Create();
         context.TestEntities.Add(new TestEntity { Id = 1, Name = "Alice" });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         using var repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
-        var entity = await context.TestEntities.FindAsync(1);
+        var entity = await context.TestEntities.FindAsync(new object[] { 1 }, TestContext.Current.CancellationToken);
         entity!.Name = "Updated";
-        var result = await repo.Update(entity);
+        var result = await repo.Update(entity, TestContext.Current.CancellationToken);
 
         Assert.Equal("Updated", result.Name);
-        Assert.Equal("Updated", (await context.TestEntities.FindAsync(1))!.Name);
+        Assert.Equal("Updated", (await context.TestEntities.FindAsync(new object[] { 1 }, TestContext.Current.CancellationToken))!.Name);
     }
 
     [Fact]
@@ -68,12 +68,12 @@ public class WriteRepositoryTests
         context.TestEntities.AddRange(
             new TestEntity { Id = 1, Name = "Alice" },
             new TestEntity { Id = 2, Name = "Bob" });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         using var repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
-        var entities = await context.TestEntities.ToListAsync();
+        var entities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
         foreach (var e in entities) e.Name = "Updated " + e.Name;
-        var result = (await repo.Update(entities)).ToList();
+        var result = (await repo.Update(entities, TestContext.Current.CancellationToken)).ToList();
 
         Assert.Equal(2, result.Count);
         Assert.All(result, e => Assert.StartsWith("Updated", e.Name));
@@ -85,7 +85,7 @@ public class WriteRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
-        var result = await repo.Update(new List<TestEntity>());
+        var result = await repo.Update(new List<TestEntity>(), TestContext.Current.CancellationToken);
 
         Assert.Empty(result);
     }
@@ -96,12 +96,12 @@ public class WriteRepositoryTests
         var context = TestDbContext.Create();
         var entity = new TestEntity { Id = 1, Name = "Alice" };
         context.TestEntities.Add(entity);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         using var repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
-        await repo.Delete(entity);
+        await repo.Delete(entity, TestContext.Current.CancellationToken);
 
-        Assert.Equal(0, await context.TestEntities.CountAsync());
+        Assert.Equal(0, await context.TestEntities.CountAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -109,13 +109,13 @@ public class WriteRepositoryTests
     {
         var context = TestDbContext.Create();
         context.TestEntities.Add(new TestEntity { Id = 1, Name = "Alice" });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         context.ChangeTracker.Clear();
         using var repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
-        await repo.Delete(1);
+        await repo.Delete(1, TestContext.Current.CancellationToken);
 
-        Assert.Equal(0, await context.TestEntities.CountAsync());
+        Assert.Equal(0, await context.TestEntities.CountAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class WriteRepositoryTests
         var context = TestDbContext.Create();
         using var repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
-        await Assert.ThrowsAsync<DataNotFoundException<TestEntity>>(() => repo.Delete(999));
+        await Assert.ThrowsAsync<DataNotFoundException<TestEntity>>(() => repo.Delete(999, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -134,13 +134,13 @@ public class WriteRepositoryTests
         context.TestEntities.AddRange(
             new TestEntity { Id = 1, Name = "Alice" },
             new TestEntity { Id = 2, Name = "Bob" });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         using var repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
-        var entities = await context.TestEntities.ToListAsync();
-        await repo.Delete(entities);
+        var entities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+        await repo.Delete(entities, TestContext.Current.CancellationToken);
 
-        Assert.Equal(0, await context.TestEntities.CountAsync());
+        Assert.Equal(0, await context.TestEntities.CountAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -148,11 +148,11 @@ public class WriteRepositoryTests
     {
         var context = TestDbContext.Create();
         context.TestEntities.Add(new TestEntity { Id = 1, Name = "Alice" });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         context.ChangeTracker.Clear();
         using IWriteRepository<TestEntity> repo = new WriteRepository<TestEntity, TestDbContext>(context);
 
-        await repo.ToListAsync();
+        await repo.ToListAsync(TestContext.Current.CancellationToken);
 
         var entries = context.ChangeTracker.Entries<TestEntity>().ToList();
         Assert.Single(entries);

@@ -14,7 +14,7 @@ public class HelpersTests
             new TestEntity { Id = 2, Name = "Bob" }
         });
 
-        var result = await mockRepo.Object.ToListAsync();
+        var result = await mockRepo.Object.ToListAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(2, result.Count);
     }
@@ -25,7 +25,7 @@ public class HelpersTests
         var mockRepo = new Mock<ITestEntityRepository>();
         mockRepo.SetupEmptyData<ITestEntityRepository, TestEntity>();
 
-        var result = await mockRepo.Object.ToListAsync();
+        var result = await mockRepo.Object.ToListAsync(TestContext.Current.CancellationToken);
 
         Assert.Empty(result);
     }
